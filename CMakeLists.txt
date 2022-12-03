@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.23)
 
 project(dijkstra-strikes-again)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(${PROJECT_NAME}_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/heap.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
         )
 
