@@ -27,10 +27,11 @@ namespace local {
     template<typename T>
     class MinKHeap {
         std::vector<HeapNode *> _references;
-        std::vector<T> &_data;
         uint32_t _next_available_slot;
         uint32_t _k;
         uint32_t _size, _capacity;
+
+        uint64_t _interchanges;
 
         void AHU_make_heap(uint32_t last_item_position);
 
@@ -46,6 +47,8 @@ namespace local {
 
         int32_t array_2_heap_position(int32_t array_index);
 
+        uint64_t interchanges_performed_so_far();
+
     public:
         /**
          * Initializes an instance of MinKHeap. Notice that the structure deals exclusively with pointers to the underlying
@@ -58,6 +61,12 @@ namespace local {
          * @param k The degree for each node
          */
         MinKHeap(std::vector<T> &data, uint32_t k);
+
+        /**
+         * Initializes an empty instance of a min heap with arity k
+         * @param k
+         */
+        MinKHeap(uint32_t k);
 
         /**
          * Inserts the item into the heap in O(log k)
@@ -84,6 +93,10 @@ namespace local {
          */
         T *pop_min();
 
+        bool is_empty();
+
+        uint32_t size();
+
         void make_heap();
 
         void make_heap(uint32_t last_item_position);
@@ -92,6 +105,7 @@ namespace local {
             os << "MinHeap { ";
             os << "k: " << dt._k << ", ";
             os << "size: " << dt._size << ", ";
+            os << "interchanges: " << dt._interchanges << ", ";
             os << "values: { ";
             for (int i = 0; i < dt._size - 1; i++)
                 os << *static_cast<T *>(dt._references[i]) << ", ";
@@ -100,6 +114,21 @@ namespace local {
             return os;
         }
     };
+
+    template<typename T>
+    uint64_t MinKHeap<T>::interchanges_performed_so_far() {
+        return _interchanges;
+    }
+
+    template<typename T>
+    bool MinKHeap<T>::is_empty() {
+        return _size == 0;
+    }
+
+    template<typename T>
+    uint32_t MinKHeap<T>::size() {
+        return _size;
+    }
 
     template<typename T>
     void MinKHeap<T>::update(T *item_ptr) {
@@ -122,7 +151,7 @@ namespace local {
     }
 
     template<typename T>
-    MinKHeap<T>::MinKHeap(std::vector<T> &data, uint32_t k) : _data(data), _k(k) {
+    MinKHeap<T>::MinKHeap(std::vector<T> &data, uint32_t k) : _k(k) {
         static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived of HeapNode");
         _references.resize(data.size());
         _size = _references.size();
@@ -132,6 +161,16 @@ namespace local {
             _references[i] = static_cast<HeapNode *>(&data[i]);
             _references[i]->position = array_2_heap_position(i);
         }
+
+        _references.push_back(nullptr);
+        _next_available_slot = _references.size() - 1;
+    }
+
+    template<typename T>
+    MinKHeap<T>::MinKHeap(uint32_t k) : _k(k) {
+        static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived of HeapNode");
+        _size = _references.size();
+        _capacity = _size;
 
         _references.push_back(nullptr);
         _next_available_slot = _references.size() - 1;
@@ -167,6 +206,7 @@ namespace local {
         uint32_t aux_position = _references[a]->position;
         _references[a]->position = _references[b]->position;
         _references[b]->position = aux_position;
+        _interchanges += 1;
     }
 
     template<typename T>
@@ -182,6 +222,7 @@ namespace local {
             _size -= 1;
 
             min->position = 0;
+            _next_available_slot -= 1;
             return static_cast<T *>(min);
         } else throw std::runtime_error("MinKHeap::pop_min -> Heap is empty");
     }
@@ -241,13 +282,13 @@ namespace local {
     template<typename T>
     void MinKHeap<T>::insert(T *item_ptr) {
         _references[_next_available_slot] = static_cast<HeapNode *>(item_ptr);
-        _references[_next_available_slot]->position = _next_available_slot + 1;
+        _references[_next_available_slot]->position = array_2_heap_position(_next_available_slot);
         _size += 1;
 
         sift_up(_next_available_slot);
 
-        _references.push_back(nullptr);
         _next_available_slot += 1;
+        if (_next_available_slot >= _references.size()) _references.push_back(nullptr);
     }
 
     template<typename T>

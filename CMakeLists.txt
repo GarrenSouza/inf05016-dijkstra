@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.16)
 
 project(dijkstra-strikes-again)
 
@@ -10,8 +10,15 @@ set(${PROJECT_NAME}_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
         )
 
-add_executable(test ${${PROJECT_NAME}_SOURCES})
+add_executable(dijkstra ${${PROJECT_NAME}_SOURCES})
 
-set_property(TARGET test PROPERTY CXX_STANDARD 11)
+set(test_cases_sources
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/test_case_generator.cpp"
+        )
 
-target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_executable(test_cases ${test_cases_sources})
+
+set_property(TARGET dijkstra PROPERTY CXX_STANDARD 11)
+set_property(TARGET test_cases PROPERTY CXX_STANDARD 11)
+
+target_include_directories(dijkstra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
