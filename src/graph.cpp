@@ -3,106 +3,35 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <assert.h>
+#include <memory>
+#include <queue>
+#include <cassert>
 
-std::vector<int> *edges_per_vertex(std::string input_file_path) {
-    auto *counters = new std::vector<int>;
+local::BipCompGraph::BipCompGraph(std::istream &in) {
+    int32_t n, w, max_w = INT32_MIN;
 
-    std::fstream in(input_file_path);
     std::string line, dummy;
 
-    while (line.substr(0, 4) != "p sp")
-        getline(in, line);
+    std::cin >> n;
 
-    std::stringstream linestr;
-
-    uint32_t vertices, edges;
-
-    linestr.str(line);
-    linestr >> dummy >> dummy >> vertices >> edges;
-
-    counters->resize(vertices);
-
-
-    uint32_t i = 0;
-    while (i < vertices) {
-        counters->at(i) = 0;
-        i++;
-    }
-
-    i = 0;
-    while (i < edges) {
-        getline(in, line);
-        if (line.substr(0, 2) == "a ") {
-            std::stringstream arc(line);
-            uint32_t u, v, w;
-            char _;
-            arc >> _ >> u >> v >> w;
-            counters->at(u - 1) += 1;
-            i++;
-        }
-    }
-
-    i = 1;
-    if (!counters->empty()) counters->at(0) -= 1;
-    while (i < vertices) {
-        counters->at(i) += counters->at(i - 1);
-        i++;
-    }
-    return counters;
-}
-
-local::DIMACS_graph::DIMACS_graph(std::string input_file_path) {
-    std::vector<int> *edge_counters = edges_per_vertex(input_file_path);
-
-    uint32_t i;
-
-    std::fstream in(input_file_path);
-    std::string line, dummy;
-
-    while (line.substr(0, 4) != "p sp") {
-        getline(in, line);
-    }
-
-    std::stringstream linestr;
-
-    linestr.str(line);
-    linestr >> dummy >> dummy >> nodes_count >> edges_count;
+    nodes_count = 2 * n;
+    edges_count = n * n;
 
     nodes.resize(nodes_count);
     edges.resize(edges_count);
 
-    i = 0;
-    while (i < edges_count) {
-        getline(in, line);
-        if (line.substr(0, 2) == "a ") {
-            std::stringstream arc(line);
-            uint32_t u, v, w;
-            char _;
-            arc >> _ >> u >> v >> w;
-            edge_to &edge = edges[edge_counters->at(position_to_array(u))];
-            edge._v = v;
-            edge._w = w;
-            edge_counters->at(position_to_array(u)) -= 1;
-            i++;
+    for (int i = 0; i < n; ++i) {
+        uint32_t dest = n + i;
+        for (int j = 0; j < n; ++j) {
+            in >> w;
+            edges[i] = {dest, w};
+            if (w > max_w)
+                max_w = w;
         }
     }
-
-    i = 0;
-    while (i < nodes_count) {
-        nodes[i]._edges_storage = &edges[edge_counters->at(i) + 1];
-        if (i == nodes_count - 1)
-            nodes[i]._edges_count = edges.size() - 1 - edge_counters->at(i);
-        else
-            nodes[i]._edges_count = edge_counters->at(i + 1) - edge_counters->at(i);
-        i++;
+    for (int i = 0; i < n; ++i) {
+        nodes[i]._potential = max_w;
     }
-
-    delete edge_counters;
-}
-
-uint32_t local::DIMACS_graph::position_to_array(uint32_t position) {
-    return position - 1;
 }
 
 std::ostream &operator<<(std::ostream &os, const local::edge_to &edgeTo) {
@@ -113,43 +42,60 @@ std::ostream &operator<<(std::ostream &os, const local::edge_to &edgeTo) {
 }
 
 std::ostream &operator<<(std::ostream &os, const local::vertex &dt) {
-    os << "{\n \"edge_count\" : " << dt._edges_count;
-    if(dt._edges_count > 0){
-        os << "\n," << dt._edges_storage[0];
-        for (int i = 1; i < dt._edges_count; i++) {
-            os << ",\n" << dt._edges_storage[i];
-        }
-    }
-    os << "\n}";
+    os << "{";
+    os << "free: " << dt._free << ",\n";
+    os << "potential: " << dt._potential << ",\n";
+    os << "}";
     return os;
 }
 
-uint32_t local::DIMACS_graph::shortest_path_length(uint32_t u, uint32_t v, uint32_t k) {
-    MinKHeap<vertex> distance_heap(k);
-    for (auto &item: nodes) {
-        item.key = ~0;
-        item._visited = false;
-    }
-    nodes[position_to_array(u)].key = 0;
-    distance_heap.insert(&nodes[position_to_array(u)]);
-    while (!distance_heap.is_empty() && !nodes[position_to_array(v)]._visited) {
-        vertex *current_node = distance_heap.pop_min();
-        current_node->_visited = true;
-        for (int i = 0; i < current_node->_edges_count; i++) {
-            edge_to *edge_to_neighbour = &current_node->_edges_storage[i];
-            vertex *neighbour = &nodes[position_to_array(edge_to_neighbour->_v)];
-            if (!neighbour->_visited) {
-                if (neighbour->key == ~0) {
-                    neighbour->key = current_node->key + edge_to_neighbour->_w;
-                    distance_heap.insert(neighbour);
-                } else if (current_node->key + edge_to_neighbour->_w < neighbour->key) {
-                    neighbour->key = current_node->key + edge_to_neighbour->_w;
-                    distance_heap.update(neighbour);
-                }
-            }
+int32_t
+local::BipCompGraph::get_augmenting_path_end_node_from(int32_t u, std::vector<int32_t> &dist, std::vector<int32_t> &pred,
+                                                       std::vector<int> &match) {
+    struct custom_less {
+        bool operator()(const std::pair<int, int> &a, const std::pair<int, int> &b) {
+            return a.first < b.first;
+        }
+    };
+
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, custom_less> pq;
+
+    auto decrease_key = [this, &dist, &pred, &pq](int32_t local, int32_t neighbour) {
+        auto w = get_weight(local, neighbour);
+        // consider Johnson's weighting (apply potential)
+        if (dist[neighbour] > dist[local] + w) {
+            dist[neighbour] = dist[local] + w;
+            pred[neighbour] = local;
+            pq.emplace(dist[neighbour], neighbour);
+        }
+    };
+
+    pq.emplace(0, u);
+    dist[u] = 0;
+
+    while (!pq.empty()) {
+        auto local = pq.top().second;
+
+        pq.pop();
+
+        if (local < nodes_count / 2) {
+            for (int32_t neighbour = nodes_count / 2; neighbour < nodes_count; ++neighbour)
+                if (neighbour != match[local])
+                    decrease_key(local, neighbour);
+        } else {
+            if (match[local] < nodes_count)
+                decrease_key(local, match[local]);
+            else
+                return local;
         }
     }
-    return nodes[position_to_array(v)].key;
+
+    return 0;
 }
 
-local::vertex::vertex(edge_to *edges, uint32_t out_edges) : _edges_storage(edges), _edges_count(out_edges) {}
+int32_t local::BipCompGraph::get_weight(int32_t u, int32_t v) {
+    assert((u < nodes_count / 2 && v >= nodes_count / 2) || (u >= nodes_count / 2 && v < nodes_count / 2));
+    if (u >= nodes_count / 2)
+        std::swap(u, v);
+    return edges[v * nodes_count / 2 + u]._w - (nodes[v]._potential - nodes[u]._potential);
+}

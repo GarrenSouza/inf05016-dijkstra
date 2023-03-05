@@ -12,39 +12,31 @@ namespace local {
     struct edge_to {
         edge_to() = default;
 
-        edge_to(uint32_t v, uint32_t w) : _v(v), _w(w) {}
+        edge_to(uint32_t v, int32_t w) : _v(v), _w(w) {}
 
         uint32_t _v;
-        uint32_t _w;
-
-//        friend std::ostream& operator<<(std::ostream& os, const edge_to& edgeTo);
+        int32_t _w;
     };
 
     struct vertex : public HeapNode {
-        uint32_t id;
-        edge_to *_edges_storage;
-        uint32_t _edges_count;
-        bool _visited;
+        int32_t _potential;
+        bool _free;
 
-        vertex() : HeapNode(), _edges_storage(nullptr), _edges_count(0), _visited(false) {}
-
-        vertex(edge_to *edges, uint32_t out_edges);
-
-//        friend std::ostream& operator<<(std::ostream& os, const vertex& vtx);
+        vertex() : HeapNode(), _free(true), _potential(0) {}
     };
 
-    class DIMACS_graph {
+    class BipCompGraph {
     public:
-        uint32_t edges_count, nodes_count;
+        int32_t edges_count, nodes_count;
 
-        explicit DIMACS_graph(std::string input_file_path);
+        explicit BipCompGraph(std::istream &in);
 
-        uint32_t shortest_path_length(uint32_t u, uint32_t v, uint32_t k);
+        int32_t get_augmenting_path_end_node_from(int32_t u, std::vector<int32_t> &dist, std::vector<int32_t>& pred, std::vector<int>& match);
 
     private:
-        static inline uint32_t position_to_array(uint32_t position);
+        int32_t get_weight(int32_t u, int32_t v);
 
         std::vector<edge_to> edges;
-        std::vector<vertex> nodes;;
+        std::vector<vertex> nodes;
     };
 }

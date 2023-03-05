@@ -33,7 +33,7 @@ std::ostream &operator<<(std::ostream &os, const value &dt) {
 int main() {
     std::string file_path("/home/gsouza/Documents/UFRGS/inf05016-dijkstra/data/USA-road-d.USA.gr");
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-    local::DIMACS_graph g(file_path, 2);
+    local::BipCompGraph g(file_path, 2);
     std::cout << "It took " << (std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start)).count()
               << " milliseconds to read the graph" << std::endl;

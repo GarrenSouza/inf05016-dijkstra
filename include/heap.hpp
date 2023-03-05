@@ -168,7 +168,7 @@ namespace local {
 
     template<typename T>
     MinKHeap<T>::MinKHeap(uint32_t k) : _k(k) {
-        static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived of HeapNode");
+        static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived from HeapNode");
         _size = _references.size();
         _capacity = _size;
 
