@@ -7,11 +7,10 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(${PROJECT_NAME}_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/heap.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
         )
 
-add_executable(dijkstra ${${PROJECT_NAME}_SOURCES})
+add_library(dijkstra ${${PROJECT_NAME}_SOURCES})
 
-set_property(TARGET dijkstra PROPERTY CXX_STANDARD 11)
+set_property(TARGET dijkstra PROPERTY CXX_STANDARD 20)
 
 target_include_directories(dijkstra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
