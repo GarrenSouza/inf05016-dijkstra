@@ -9,6 +9,10 @@
 
 namespace local {
 
+    enum class MagicNodes {
+        NULL_NODE = -1
+    };
+
     struct edge_to {
         edge_to() = default;
 
@@ -18,11 +22,13 @@ namespace local {
         int32_t _w;
     };
 
-    struct vertex {
-        int32_t _potential;
+    struct vertex : HeapNode {
+        int32_t id, _potential;
         bool _free;
 
-        vertex() : _free(true), _potential(0) {}
+        vertex() : id(static_cast<int> (MagicNodes::NULL_NODE)),
+                   _potential(0),
+                   _free(true){}
     };
 
     class BipCompGraph {
@@ -37,7 +43,7 @@ namespace local {
 
         explicit BipCompGraph(std::istream &in);
 
-        void getMaximumMatching(std::vector<int> &matching);
+        int32_t getMaximumMatching(std::vector<int> &matching);
 
         friend std::ostream &operator<<(std::ostream &os, const BipCompGraph &graph);
 
@@ -47,15 +53,19 @@ namespace local {
 
         bool validNodeIndex(int n) const;
 
+        int32_t expected_maximum_match;
+
     private:
 
-        int32_t get_weight(int32_t u, int32_t v);
+        int32_t get_weight_johnson(int32_t u, int32_t v);
+
+        int32_t get_weight_raw(int32_t u, int32_t v);
 
         int32_t set_weight(int32_t u, int32_t v, int32_t w);
 
-        int32_t get_augmenting_path_end_node(std::vector<int32_t> &dist,
-                                             std::vector<int32_t> &pred,
-                                             std::vector<int> &match);
+        vertex * get_augmenting_path_end_node(std::vector<int32_t> &dist,
+                                              std::vector<int32_t> &pred,
+                                              std::vector<int> &match);
 
         int32_t net_score_over_new_augmenting_path(int32_t s, int32_t t, const std::vector<int32_t> &pred);
 
@@ -65,14 +75,8 @@ namespace local {
                              std::vector<int32_t> &match);
 
         void update_potentials(const std::vector<int> &dist);
-
         std::vector<edge_to> edges;
         std::vector<vertex> nodes;
-        bool pending_restore;
-
-        enum class MagicNodes {
-            NULL_NODE = -1
-        };
     };
 
     std::ostream &operator<<(std::ostream &os, const local::BipCompGraph &graph);
