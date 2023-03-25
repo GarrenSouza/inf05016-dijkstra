@@ -66,7 +66,7 @@ namespace local {
          * Initializes an empty instance of a min heap with arity k
          * @param k
          */
-        MinKHeap(uint32_t k);
+        explicit MinKHeap(uint32_t k);
 
         /**
          * Inserts the item into the heap in O(log k)
@@ -151,7 +151,7 @@ namespace local {
     }
 
     template<typename T>
-    MinKHeap<T>::MinKHeap(std::vector<T> &data, uint32_t k) : _k(k) {
+    MinKHeap<T>::MinKHeap(std::vector<T> &data, uint32_t k) : _k(k), _interchanges(0) {
         static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived of HeapNode");
         _references.resize(data.size());
         _size = _references.size();
@@ -167,7 +167,7 @@ namespace local {
     }
 
     template<typename T>
-    MinKHeap<T>::MinKHeap(uint32_t k) : _k(k) {
+    MinKHeap<T>::MinKHeap(uint32_t k) : _k(k), _interchanges(0) {
         static_assert(std::is_base_of<HeapNode, T>::value, "@MinKHeap<T>::MinKHeap | T is not derived from HeapNode");
         _size = _references.size();
         _capacity = _size;
