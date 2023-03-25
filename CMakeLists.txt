@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(dijkstra-strikes-again)
+project(heap)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(${PROJECT_NAME}_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/heap.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp"
         )
 
-add_library(dijkstra ${${PROJECT_NAME}_SOURCES})
+add_library(heap ${${PROJECT_NAME}_SOURCES})
 
-set_property(TARGET dijkstra PROPERTY CXX_STANDARD 20)
+set_property(TARGET heap PROPERTY CXX_STANDARD 20)
 
-target_include_directories(dijkstra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(heap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
