@@ -47,9 +47,10 @@ namespace local {
 
         int32_t array_2_heap_position(int32_t array_index);
 
-        uint64_t interchanges_performed_so_far();
-
     public:
+
+        uint64_t interchanges_performed_so_far();
+        
         /**
          * Initializes an instance of MinKHeap. Notice that the structure deals exclusively with pointers to the underlying
          * data, so make sure your underlying *data* is safe while working with this heap implementation. This holds for
